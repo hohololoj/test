@@ -6,6 +6,7 @@ use App\Dto\ContactRequest;
 use App\Service\AIService;
 use App\Service\EvaluateSettings;
 use App\Service\FeedbackService;
+use App\Service\LoggerService;
 use App\Service\MailerService;
 use App\Service\RateLimiterService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -23,7 +24,8 @@ class ContactController extends AbstractController{
 		RateLimiterService $rateLimiter,
 		AIService $aiService,
 		FeedbackService $feedbackService,
-		MailerService $mailerService
+		MailerService $mailerService,
+		LoggerService $loggerService
 		): JsonResponse{
 		
 		$ip = $httpRequest->getClientIp() ?? '127.0.0.1';
@@ -53,7 +55,7 @@ class ContactController extends AbstractController{
 
 		$mailerService->sendNotification($request->name, $request->email, $request->phone, $request->comment, $aiReply);
 
-		return $this->json([
+		$response = $this->json([
 			'status' => 'ok',
 			'data' => [
 				'name' => $request->name,
@@ -64,6 +66,10 @@ class ContactController extends AbstractController{
 			'sentiment' => $sentiment,
 			'type' => $type,
 			'reply' => $aiReply,
-		]);
+		]); 
+
+		$loggerService->logRequest($httpRequest, $response);
+
+		return $response;
 	}
 }

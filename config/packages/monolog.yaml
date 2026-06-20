@@ -1,0 +1,15 @@
+monolog:
+    channels: ['api']
+    handlers:
+        api_requests:
+            type: stream
+            path: '%kernel.logs_dir%/api_requests.log'
+            level: info
+            channels: ['api']
+            formatter: 'monolog.formatter.json'
+        main:
+            type: stream
+            path: '%kernel.logs_dir%/app.log'
+            level: warning
+            channels: ['!api']
+            
