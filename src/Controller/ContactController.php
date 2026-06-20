@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Dto\ContactRequest;
 use App\Service\AIService;
 use App\Service\EvaluateSettings;
+use App\Service\FeedbackService;
 use App\Service\RateLimiterService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -19,7 +20,8 @@ class ContactController extends AbstractController{
 		#[MapRequestPayload] ContactRequest $request,
 		Request $httpRequest,
 		RateLimiterService $rateLimiter,
-		AIService $aiService
+		AIService $aiService,
+		FeedbackService $feedbackService
 		): JsonResponse{
 		
 		$ip = $httpRequest->getClientIp() ?? '127.0.0.1';
@@ -33,6 +35,15 @@ class ContactController extends AbstractController{
 
 		$settings = new EvaluateSettings(true, true, true);
 		$aiResponse = $aiService->evaluate($request->comment, $request->name, $settings);
+
+		$feedbackService->addFeedback([
+			'name' => $request->name,
+			'email' => $request->email,
+			'phone' => $request->phone,
+			'comment' => $request->comment,
+			'sentiment' => $aiResponse['sentiment'],
+			'type' => $aiResponse['type']
+		]);
 
 		return $this->json([
 			'status' => 'ok',

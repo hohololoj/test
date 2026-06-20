@@ -9,7 +9,14 @@ $connection = DriverManager::getConnection([
 	'path' => __DIR__ . '/../var/data.db'
 ]);
 
-$sql = file_get_contents(__DIR__ . '/../migrations/001_create_ratelimit.sql');
-$connection->executeStatement($sql);
+$migrationsDir = __DIR__ . '/../migrations';
+$files = glob($migrationsDir . '/*.sql');
+sort($files);
+
+foreach ($files as $file) {
+    $sql = file_get_contents($file);
+    $connection->executeStatement($sql);
+    echo basename($file) . " - done\n";
+}
 
 echo "Migration successful\n";
