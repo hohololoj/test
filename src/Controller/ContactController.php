@@ -3,15 +3,37 @@
 namespace App\Controller;
 
 use App\Dto\ContactRequest;
+use App\Service\AIService;
+use App\Service\EvaluateSettings;
+use App\Service\RateLimiterService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\Routing\Attribute\Route;
 
 class ContactController extends AbstractController{
 	#[Route('api/contact', name: 'api_contact', methods: ['POST'])]
-	public function submit(#[MapRequestPayload] ContactRequest $request): JsonResponse{
+	public function submit(
+		#[MapRequestPayload] ContactRequest $request,
+		Request $httpRequest,
+		RateLimiterService $rateLimiter,
+		AIService $aiService
+		): JsonResponse{
+		
+		$ip = $httpRequest->getClientIp() ?? '127.0.0.1';
+
+		if(!$rateLimiter->check($ip)){
+			return $this->json([
+				'status' => 'error',
+				'message' => 'Слишком много запросов, попробуйте позже'
+			], Response::HTTP_TOO_MANY_REQUESTS);
+		}
+
+		$settings = new EvaluateSettings(true, true, true);
+		$aiResponse = $aiService->evaluate($request->comment, $request->name, $settings);
+
 		return $this->json([
 			'status' => 'ok',
 			'data' => [
@@ -19,7 +41,10 @@ class ContactController extends AbstractController{
 				'email' => $request->email,
 				'phone' => $request->phone,
 				'comment' => $request->comment
-			]
+			],
+			'sentiment' => $aiResponse['sentiment'] ?? null,
+			'type' => $aiResponse['type'] ?? null,
+			'reply' => $aiResponse['reply'] ?? null,
 		]);
 	}
 }
