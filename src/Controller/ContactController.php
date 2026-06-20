@@ -6,6 +6,7 @@ use App\Dto\ContactRequest;
 use App\Service\AIService;
 use App\Service\EvaluateSettings;
 use App\Service\FeedbackService;
+use App\Service\MailerService;
 use App\Service\RateLimiterService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -21,7 +22,8 @@ class ContactController extends AbstractController{
 		Request $httpRequest,
 		RateLimiterService $rateLimiter,
 		AIService $aiService,
-		FeedbackService $feedbackService
+		FeedbackService $feedbackService,
+		MailerService $mailerService
 		): JsonResponse{
 		
 		$ip = $httpRequest->getClientIp() ?? '127.0.0.1';
@@ -35,15 +37,21 @@ class ContactController extends AbstractController{
 
 		$settings = new EvaluateSettings(true, true, true);
 		$aiResponse = $aiService->evaluate($request->comment, $request->name, $settings);
+		
+		$aiReply = $aiResponse ? $aiResponse['reply'] : null;
+		$sentiment = $aiResponse ? $aiResponse['sentiment'] : null;
+		$type = $aiResponse ? $aiResponse['type'] : null;
 
 		$feedbackService->addFeedback([
 			'name' => $request->name,
 			'email' => $request->email,
 			'phone' => $request->phone,
 			'comment' => $request->comment,
-			'sentiment' => $aiResponse['sentiment'],
-			'type' => $aiResponse['type']
+			'sentiment' => $sentiment,
+			'type' => $type
 		]);
+
+		$mailerService->sendNotification($request->name, $request->email, $request->phone, $request->comment, $aiReply);
 
 		return $this->json([
 			'status' => 'ok',
@@ -53,9 +61,9 @@ class ContactController extends AbstractController{
 				'phone' => $request->phone,
 				'comment' => $request->comment
 			],
-			'sentiment' => $aiResponse['sentiment'] ?? null,
-			'type' => $aiResponse['type'] ?? null,
-			'reply' => $aiResponse['reply'] ?? null,
+			'sentiment' => $sentiment,
+			'type' => $type,
+			'reply' => $aiReply,
 		]);
 	}
 }

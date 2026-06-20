@@ -27,5 +27,9 @@ services:
         arguments:
             $limit: '%env(int:RATELIMIT_LIMIT_REQUESTS)%'
             $timeout_s: '%env(int:RATELIMIT_TIMEOUT_SECONDS)%'
+    App\Service\MailerService:
+        arguments:
+            $from: '%env(MAILER_FROM)%'
+            $to: '%env(MAILER_TO)%'
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
