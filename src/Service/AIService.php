@@ -13,11 +13,11 @@ class EvaluateSettings{
 }
 
 class AIService{
-	
+
 	public function __construct(
 		private HttpClientInterface $httpClient,
 		private string $endpoint = "http://192.168.0.107:8000",
-		private string $token = "sk-lm-t2aVmmpi:o48VdYh3WByR6fT4PEeH",
+		private string $apiKey = "sk-lm-t2aVmmpi:o48VdYh3WByR6fT4PEeH",
 		private string $model = "google/gemma-4-e4b"
 	){}
 
@@ -34,7 +34,7 @@ class AIService{
 				$this->endpoint . '/v1/chat/completions',
 				[
 					'headers' => [
-						'Authorization' => 'Bearer ' . $this->token,
+						'Authorization' => 'Bearer ' . $this->apiKey,
 						'Content-Type' => 'application/json'
 					],
 					'json' => [
