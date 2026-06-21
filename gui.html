@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contact API Tester</title>
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+      min-height: 100vh;
+      color: #e0e0e0;
+      padding: 2rem 1rem;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      text-align: center;
+      font-weight: 600;
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+      background: linear-gradient(90deg, #f7971e, #ffd200);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #888;
+      margin-bottom: 2rem;
+      font-size: 0.9rem;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.06);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      transition: border-color 0.2s;
+    }
+
+    .card:hover {
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.25rem;
+    }
+
+    .card-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .method-badge {
+      display: inline-block;
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 0.2em 0.6em;
+      border-radius: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .method-post { background: #49cc90; color: #000; }
+    .method-get  { background: #61affe; color: #fff; }
+
+    .endpoint {
+      font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+      font-size: 0.85rem;
+      color: #aaa;
+    }
+
+    .form-group {
+      margin-bottom: 1rem;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 500;
+      margin-bottom: 0.35rem;
+      color: #ccc;
+    }
+
+    .form-group input,
+    .form-group textarea {
+      width: 100%;
+      padding: 0.7rem 0.9rem;
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 8px;
+      color: #e0e0e0;
+      font-size: 0.95rem;
+      font-family: inherit;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      outline: none;
+    }
+
+    .form-group input:focus,
+    .form-group textarea:focus {
+      border-color: #f7971e;
+      box-shadow: 0 0 0 3px rgba(247, 151, 30, 0.15);
+    }
+
+    .form-group textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    .form-group .hint {
+      font-size: 0.75rem;
+      color: #666;
+      margin-top: 0.25rem;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      padding: 0.7rem 1.4rem;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.2s, opacity 0.2s;
+      font-family: inherit;
+    }
+
+    .btn:active {
+      transform: scale(0.97);
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #f7971e, #ffd200);
+      color: #1a1a2e;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      box-shadow: 0 4px 20px rgba(247, 151, 30, 0.35);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.08);
+      color: #e0e0e0;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+    }
+
+    .btn-secondary:hover:not(:disabled) {
+      background: rgba(255, 255, 255, 0.14);
+    }
+
+    .btn-danger {
+      background: rgba(239, 68, 68, 0.15);
+      color: #ef4444;
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    .btn-danger:hover:not(:disabled) {
+      background: rgba(239, 68, 68, 0.25);
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 0.75rem;
+      margin-top: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .btn-full {
+      width: 100%;
+    }
+
+    .response-area {
+      margin-top: 1rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      padding-top: 1rem;
+    }
+
+    .response-area .label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #666;
+      margin-bottom: 0.5rem;
+    }
+
+    .response-area .meta {
+      display: flex;
+      gap: 1rem;
+      font-size: 0.8rem;
+      margin-bottom: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .response-area .meta .status {
+      font-weight: 600;
+    }
+
+    .response-area .meta .status.success { color: #49cc90; }
+    .response-area .meta .status.client-error { color: #f93e3e; }
+    .response-area .meta .status.server-error { color: #ef4444; }
+    .response-area .meta .status.info { color: #61affe; }
+
+    .response-area .meta .latency {
+      color: #888;
+    }
+
+    .response-area pre {
+      background: rgba(0, 0, 0, 0.4);
+      border-radius: 8px;
+      padding: 1rem;
+      font-size: 0.8rem;
+      line-height: 1.5;
+      overflow-x: auto;
+      font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+      color: #c9d1d9;
+      max-height: 350px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .response-area pre .json-key { color: #ff7b72; }
+    .response-area pre .json-string { color: #a5d6ff; }
+    .response-area pre .json-number { color: #79c0ff; }
+    .response-area pre .json-boolean { color: #d2a8ff; }
+    .response-area pre .json-null { color: #8b949e; }
+
+    .toast {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(8px);
+      color: #e0e0e0;
+      padding: 0.8rem 1.2rem;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      opacity: 0;
+      transform: translateY(10px);
+      transition: opacity 0.3s, transform 0.3s;
+      pointer-events: none;
+      z-index: 100;
+    }
+
+    .toast.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .toast.error {
+      border-color: rgba(239, 68, 68, 0.4);
+    }
+
+    .toast.success {
+      border-color: rgba(73, 204, 144, 0.4);
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      border-top-color: #ffd200;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .quick-actions {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-bottom: 1rem;
+    }
+
+    .quick-actions .btn-sm {
+      padding: 0.35rem 0.7rem;
+      font-size: 0.75rem;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #aaa;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+      font-family: inherit;
+    }
+
+    .quick-actions .btn-sm:hover {
+      background: rgba(255, 255, 255, 0.12);
+      color: #e0e0e0;
+    }
+
+    @media (max-width: 600px) {
+      body { padding: 1rem 0.75rem; }
+      .form-row { grid-template-columns: 1fr; }
+      .card-header { flex-direction: column; align-items: flex-start; gap: 0.3rem; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1>🔌 Contact API Tester</h1>
+  <p class="subtitle">Тестирование API обратной связи &bull; <span id="server-url">http://127.0.0.1:8000</span></p>
+
+  <!-- Health Check Card -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">
+        <span class="method-badge method-get">GET</span>
+        Health Check
+      </div>
+      <span class="endpoint">/api/health</span>
+    </div>
+    <p style="color:#888;font-size:0.85rem;margin-bottom:1rem;">
+      Проверка доступности базы данных и AI-провайдера.
+    </p>
+    <button class="btn btn-secondary" id="health-btn" onclick="checkHealth()">
+      ▶ Выполнить
+    </button>
+    <div id="health-response" class="response-area" style="display:none;"></div>
+  </div>
+
+  <!-- Submit Contact Card -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">
+        <span class="method-badge method-post">POST</span>
+        Отправить обращение
+      </div>
+      <span class="endpoint">/api/contact</span>
+    </div>
+
+    <div class="quick-actions">
+      <button class="btn-sm" onclick="fillPreset('positive')">😊 Позитивный</button>
+      <button class="btn-sm" onclick="fillPreset('negative')">😠 Негативный</button>
+      <button class="btn-sm" onclick="fillPreset('cooperation')">🤝 Сотрудничество</button>
+      <button class="btn-sm" onclick="fillPreset('complaint')">📢 Жалоба</button>
+      <button class="btn-sm" onclick="fillPreset('clear')">✕ Очистить</button>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label for="name">Имя</label>
+        <input type="text" id="name" placeholder="Иван Петров" value="">
+      </div>
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input type="email" id="email" placeholder="ivan@example.com" value="">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label for="phone">Телефон</label>
+        <input type="tel" id="phone" placeholder="+7 999 123-45-67" value="">
+      </div>
+      <div class="form-group">
+        <label for="comment">Комментарий</label>
+        <textarea id="comment" placeholder="Хочу обсудить сотрудничество по разработке сайта"></textarea>
+      </div>
+    </div>
+
+    <button class="btn btn-primary btn-full" id="submit-btn" onclick="submitContact()">
+      ✉ Отправить
+    </button>
+    <div id="submit-response" class="response-area" style="display:none;"></div>
+  </div>
+
+  <!-- Metrics Card -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">
+        <span class="method-badge method-get">GET</span>
+        Статистика
+      </div>
+      <span class="endpoint">/api/metrics</span>
+    </div>
+    <p style="color:#888;font-size:0.85rem;margin-bottom:1rem;">
+      Агрегированная статистика по сохранённым обращениям.
+    </p>
+    <button class="btn btn-secondary" id="metrics-btn" onclick="getMetrics()">
+      ▶ Выполнить
+    </button>
+    <div id="metrics-response" class="response-area" style="display:none;"></div>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+const BASE_URL = 'http://127.0.0.1:8000';
+
+function showToast(message, type = 'success') {
+  const toast = document.getElementById('toast');
+  toast.textContent = message;
+  toast.className = 'toast ' + type + ' visible';
+  clearTimeout(toast._timer);
+  toast._timer = setTimeout(() => toast.classList.remove('visible'), 3000);
+}
+
+function formatJSON(data) {
+  const json = JSON.stringify(data, null, 2);
+  return syntaxHighlight(json);
+}
+
+function syntaxHighlight(json) {
+  return json.replace(/&/g, '&').replace(/</g, '<').replace(/>/g, '>')
+    .replace(/"([^"]+)":/g, '<span class="json-key">"$1"</span>:')
+    .replace(/: "([^"]+)"/g, ': <span class="json-string">"$1"</span>')
+    .replace(/: (\d+)/g, ': <span class="json-number">$1</span>')
+    .replace(/: (true|false)/g, ': <span class="json-boolean">$1</span>')
+    .replace(/: (null)/g, ': <span class="json-null">$1</span>');
+}
+
+function getStatusClass(status) {
+  if (status >= 200 && status < 300) return 'success';
+  if (status >= 400 && status < 500) return 'client-error';
+  if (status >= 500) return 'server-error';
+  return 'info';
+}
+
+function renderResponse(containerId, status, latency, data) {
+  const container = document.getElementById(containerId);
+  container.style.display = 'block';
+  container.innerHTML = `
+    <div class="label">Response</div>
+    <div class="meta">
+      <span class="status ${getStatusClass(status)}">${status}</span>
+      <span class="latency">${latency}ms</span>
+    </div>
+    <pre>${formatJSON(data)}</pre>
+  `;
+}
+
+async function apiCall(method, path, body = null) {
+  const start = performance.now();
+  const headers = { 'Accept': 'application/json' };
+  if (body) headers['Content-Type'] = 'application/json';
+
+  const res = await fetch(BASE_URL + path, {
+    method,
+    headers,
+    body: body ? JSON.stringify(body) : null
+  });
+  const latency = Math.round(performance.now() - start);
+  let data;
+  try {
+    data = await res.json();
+  } catch {
+    data = { raw: await res.text() };
+  }
+  return { status: res.status, latency, data };
+}
+
+// --- Health Check ---
+async function checkHealth() {
+  const btn = document.getElementById('health-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Загрузка...';
+  try {
+    const { status, latency, data } = await apiCall('GET', '/api/health');
+    renderResponse('health-response', status, latency, data);
+    showToast('Health check выполнен', status === 200 ? 'success' : 'error');
+  } catch (err) {
+    renderResponse('health-response', 0, 0, { error: err.message });
+    showToast('Ошибка: ' + err.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '▶ Выполнить';
+  }
+}
+
+// --- Submit Contact ---
+async function submitContact() {
+  const name = document.getElementById('name').value.trim();
+  const email = document.getElementById('email').value.trim();
+  const phone = document.getElementById('phone').value.trim();
+  const comment = document.getElementById('comment').value.trim();
+
+  if (!name || !email || !phone || !comment) {
+    showToast('Заполните все поля формы', 'error');
+    return;
+  }
+
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Отправка...';
+  try {
+    const { status, latency, data } = await apiCall('POST', '/api/contact', { name, email, phone, comment });
+    renderResponse('submit-response', status, latency, data);
+    showToast('Обращение отправлено', status === 200 ? 'success' : 'error');
+  } catch (err) {
+    renderResponse('submit-response', 0, 0, { error: err.message });
+    showToast('Ошибка: ' + err.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '✉ Отправить';
+  }
+}
+
+// --- Metrics ---
+async function getMetrics() {
+  const btn = document.getElementById('metrics-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Загрузка...';
+  try {
+    const { status, latency, data } = await apiCall('GET', '/api/metrics');
+    renderResponse('metrics-response', status, latency, data);
+    showToast('Статистика получена', status === 200 ? 'success' : 'error');
+  } catch (err) {
+    renderResponse('metrics-response', 0, 0, { error: err.message });
+    showToast('Ошибка: ' + err.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '▶ Выполнить';
+  }
+}
+
+// --- Presets ---
+const presets = {
+  positive: {
+    name: 'Анна Смирнова',
+    email: 'anna@example.com',
+    phone: '+7 912 345-67-89',
+    comment: 'Отличный сервис! Всё очень понравилось, спасибо большое за вашу работу. Обязательно обращусь ещё.'
+  },
+  negative: {
+    name: 'Олег Иванов',
+    email: 'oleg@example.com',
+    phone: '+7 923 456-78-90',
+    comment: 'Очень плохое качество обслуживания. Ждал ответа целую неделю и так ничего и не получил. Разочарован.'
+  },
+  cooperation: {
+    name: 'Михаил Козлов',
+    email: 'mikhail@example.com',
+    phone: '+7 934 567-89-01',
+    comment: 'Хочу обсудить сотрудничество по разработке сайта. Наша компания заинтересована в ваших услугах.'
+  },
+  complaint: {
+    name: 'Елена Петрова',
+    email: 'elena@example.com',
+    phone: '+7 945 678-90-12',
+    comment: 'Заказала услугу неделю назад, до сих пор ничего не сделано. Требую возврата денег и разбирательства.'
+  }
+};
+
+function fillPreset(key) {
+  if (key === 'clear') {
+    document.getElementById('name').value = '';
+    document.getElementById('email').value = '';
+    document.getElementById('phone').value = '';
+    document.getElementById('comment').value = '';
+    document.getElementById('submit-response').style.display = 'none';
+    return;
+  }
+  const p = presets[key];
+  if (!p) return;
+  document.getElementById('name').value = p.name;
+  document.getElementById('email').value = p.email;
+  document.getElementById('phone').value = p.phone;
+  document.getElementById('comment').value = p.comment;
+  document.getElementById('submit-response').style.display = 'none';
+  showToast('Пресет "' + {
+    positive: 'Позитивный',
+    negative: 'Негативный',
+    cooperation: 'Сотрудничество',
+    complaint: 'Жалоба'
+  }[key] + '" загружен');
+}
+</script>
+
+</body>
+</html>
