@@ -14,11 +14,9 @@ class EvaluateSettings{
 
 class AIService{
 	
-	private string $comment;
-
 	public function __construct(
 		private HttpClientInterface $httpClient,
-		private string $source = "http://192.168.0.107:8000",
+		private string $endpoint = "http://192.168.0.107:8000",
 		private string $token = "sk-lm-t2aVmmpi:o48VdYh3WByR6fT4PEeH",
 		private string $model = "google/gemma-4-e4b"
 	){}
@@ -33,7 +31,7 @@ class AIService{
 		try{
 			$response = $this->httpClient->request(
 				'POST',
-				$this->source . '/v1/chat/completions',
+				$this->endpoint . '/v1/chat/completions',
 				[
 					'headers' => [
 						'Authorization' => 'Bearer ' . $this->token,

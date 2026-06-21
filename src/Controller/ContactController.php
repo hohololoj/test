@@ -17,6 +17,7 @@ use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\Routing\Attribute\Route;
 
 class ContactController extends AbstractController{
+	
 	#[Route('api/contact', name: 'api_contact', methods: ['POST'])]
 	public function submit(
 		#[MapRequestPayload] ContactRequest $request,
@@ -42,7 +43,7 @@ class ContactController extends AbstractController{
 		
 		$aiReply = $aiResponse ? $aiResponse['reply'] : null;
 		$sentiment = $aiResponse ? $aiResponse['sentiment'] : null;
-		$type = $aiResponse ? $aiResponse['type'] : null;
+		$type = $aiResponse ? $aiResponse->type : null;
 
 		$feedbackService->addFeedback([
 			'name' => $request->name,
@@ -53,7 +54,7 @@ class ContactController extends AbstractController{
 			'type' => $type
 		]);
 
-		$mailerService->sendNotification($request->name, $request->email, $request->phone, $request->comment, $aiReply);
+		// $mailerService->sendNotification($request->name, $request->email, $request->phone, $request->comment, $aiReply);
 
 		$response = $this->json([
 			'status' => 'ok',

@@ -34,5 +34,15 @@ services:
     App\Service\LoggerService:
         arguments:
             $logger: '@monolog.logger.api'
+    App\EventListeners\ExceptionsListener:
+        arguments:
+            $logger: '@logger'
+        tags:
+            - { name: kernel.event_listener, event: kernel.exception }
+    App\Service\AIService:
+        arguments:
+            $endpoint: '%env(AI_ENDPOINT)%'
+            $apiKey: '%env(AI_API_KEY)%'
+            $model: '%env(AI_MODEL)%'
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
