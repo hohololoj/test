@@ -8,9 +8,6 @@
             "ref": "fdd756167454623e21f1d769c5b814b243782a67"
         }
     },
-    "nelmio/api-doc-bundle": {
-        "version": "v5.10.3"
-    },
     "nelmio/cors-bundle": {
         "version": "2.6",
         "recipe": {

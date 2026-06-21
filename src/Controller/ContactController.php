@@ -43,7 +43,7 @@ class ContactController extends AbstractController{
 		
 		$aiReply = $aiResponse ? $aiResponse['reply'] : null;
 		$sentiment = $aiResponse ? $aiResponse['sentiment'] : null;
-		$type = $aiResponse ? $aiResponse->type : null;
+		$type = $aiResponse ? $aiResponse['type'] : null;
 
 		$feedbackService->addFeedback([
 			'name' => $request->name,
@@ -56,6 +56,7 @@ class ContactController extends AbstractController{
 
 		// $mailerService->sendNotification($request->name, $request->email, $request->phone, $request->comment, $aiReply);
 
+		$reply = $aiReply ?? "Здравствуйте, $request->name. Спасибо за ваше обращение. Мы получили его и скоро ответим.";
 		$response = $this->json([
 			'status' => 'ok',
 			'data' => [
@@ -66,7 +67,7 @@ class ContactController extends AbstractController{
 			],
 			'sentiment' => $sentiment,
 			'type' => $type,
-			'reply' => $aiReply,
+			'reply' => $reply,
 		]); 
 
 		$loggerService->logRequest($httpRequest, $response);

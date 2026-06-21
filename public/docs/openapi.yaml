@@ -1,0 +1,243 @@
+openapi: 3.0.3
+info:
+  title: Contact API
+  description: |
+    REST API для формы обратной связи с AI-интеграцией, email-уведомлениями и защитой от спама.
+
+    Все запросы должны содержать заголовок `Accept: application/json`.
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8000
+    description: Локальный сервер
+
+paths:
+  /api/contact:
+    post:
+      summary: Отправить обращение
+      description: |
+        Принимает данные формы обратной связи, проверяет rate limit,
+        анализирует сообщение через AI, сохраняет обращение в БД и отправляет email-уведомления.
+      operationId: submitContact
+      tags:
+        - Contact
+      parameters:
+        - $ref: '#/components/parameters/AcceptJson'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContactRequest'
+            example:
+              name: Иван Петров
+              email: ivan@example.com
+              phone: "+7 999 123-45-67"
+              comment: Хочу обсудить сотрудничество по разработке сайта
+      responses:
+        '200':
+          description: Обращение принято
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContactSuccessResponse'
+        '422':
+          description: Ошибка валидации
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Превышен лимит запросов
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RateLimitErrorResponse'
+              example:
+                status: error
+                message: Слишком много запросов, попробуйте позже
+        '500':
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/health:
+    get:
+      summary: Проверка состояния сервиса
+      description: Проверяет доступность базы данных и AI-провайдера.
+      operationId: healthCheck
+      tags:
+        - System
+      parameters:
+        - $ref: '#/components/parameters/AcceptJson'
+      responses:
+        '200':
+          description: Все компоненты работают
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+        '503':
+          description: Один или несколько компонентов недоступны
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+
+  /api/metrics:
+    get:
+      summary: Статистика обращений
+      description: Возвращает агрегированную статистику по сохранённым обращениям.
+      operationId: getMetrics
+      tags:
+        - System
+      parameters:
+        - $ref: '#/components/parameters/AcceptJson'
+      responses:
+        '200':
+          description: Статистика
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MetricsResponse'
+
+components:
+  parameters:
+    AcceptJson:
+      name: Accept
+      in: header
+      required: true
+      description: Обязательный заголовок — без него Symfony может вернуть HTML вместо JSON
+      schema:
+        type: string
+        enum: [application/json]
+      example: application/json
+
+  schemas:
+    ContactRequest:
+      type: object
+      required:
+        - name
+        - email
+        - phone
+        - comment
+      properties:
+        name:
+          type: string
+          minLength: 2
+          maxLength: 100
+          example: Иван Петров
+        email:
+          type: string
+          format: email
+          example: ivan@example.com
+        phone:
+          type: string
+          pattern: '^\+?[0-9\s\-\(\)]{7,20}$'
+          example: "+7 999 123-45-67"
+        comment:
+          type: string
+          minLength: 10
+          maxLength: 1024
+          example: Хочу обсудить сотрудничество по разработке сайта
+
+    ContactSuccessResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [ok]
+        data:
+          type: object
+          properties:
+            name:
+              type: string
+            email:
+              type: string
+            phone:
+              type: string
+            comment:
+              type: string
+        sentiment:
+          type: string
+          nullable: true
+          enum: [позитивно, нейтрально, негативно, null]
+          description: Тональность сообщения (null, если AI недоступен)
+        type:
+          type: string
+          nullable: true
+          enum: [отзыв, сотрудничество, вопрос, жалоба, другое, null]
+          description: Категория обращения (null, если AI недоступен)
+        reply:
+          type: string
+          description: AI-ответ или стандартная заглушка, если AI недоступен
+
+    RateLimitErrorResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [error]
+        message:
+          type: string
+
+    ErrorResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [error]
+        message:
+          type: string
+        code:
+          type: integer
+        detail:
+          type: string
+          description: Присутствует только при APP_DEBUG=1
+
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [healthy, degraded]
+        checks:
+          type: object
+          properties:
+            database:
+              type: string
+              enum: [ok, unavailable]
+            ai_service:
+              type: string
+              enum: [ok, degraded, unavailable]
+        timestamp:
+          type: integer
+          format: int64
+
+    MetricsResponse:
+      type: object
+      properties:
+        total:
+          type: integer
+        last_week:
+          type: integer
+        by_sentiment:
+          type: array
+          items:
+            type: object
+            properties:
+              sentiment:
+                type: string
+              count:
+                type: integer
+        by_type:
+          type: array
+          items:
+            type: object
+            properties:
+              type:
+                type: string
+              count:
+                type: integer

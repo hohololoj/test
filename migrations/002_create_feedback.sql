@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS Feedback(
 	name TEXT NOT NULL,
 	email TEXT NOT NULL,
 	phone TEXT NOT NULL,
-    message TEXT NOT NULL,
+    comment TEXT NOT NULL,
 	sentiment TEXT DEFAULT NULL,
     type TEXT DEFAULT NULL,
 	created_at INTEGER NOT NULL

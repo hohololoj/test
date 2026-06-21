@@ -16,9 +16,9 @@ class AIService{
 
 	public function __construct(
 		private HttpClientInterface $httpClient,
-		private string $endpoint = "http://192.168.0.107:8000",
-		private string $apiKey = "sk-lm-t2aVmmpi:o48VdYh3WByR6fT4PEeH",
-		private string $model = "google/gemma-4-e4b"
+		private string $endpoint,
+		private string $apiKey,
+		private string $model
 	){}
 
 	public function evaluate(string $comment, string $name, EvaluateSettings $settings){

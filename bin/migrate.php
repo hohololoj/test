@@ -1,12 +1,12 @@
 <?php
 
-require __DIR__ . "/../vendor/autoload.php";
+require __DIR__ . '/../vendor/autoload.php';
 
 use Doctrine\DBAL\DriverManager;
 
 $connection = DriverManager::getConnection([
 	'driver' => 'pdo_sqlite',
-	'path' => __DIR__ . '/../var/data.db'
+	'path' => __DIR__ . '/../var/data.db',
 ]);
 
 $migrationsDir = __DIR__ . '/../migrations';
